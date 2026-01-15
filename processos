@@ -187,3 +187,97 @@ def renomear_cpfmat(pasta_raiz, pasta_id_cpf, planilha_cpf_matricula):
             print(f"❌ Erro ao renomear {nome_pasta}: {e}")
 
     print("\n🏁 Processo finalizado com sucesso!")
+
+
+def adicionar_matricula_se_somente_cpf(pasta_raiz, planilha_cpf_matricula):
+    import os
+    import pandas as pd
+    import re
+
+    # ===============================
+    # FUNÇÕES AUXILIARES
+    # ===============================
+
+    def limpar_cpf(valor):
+        return re.sub(r"\D", "", str(valor))
+
+    def eh_somente_cpf(nome):
+        return bool(re.fullmatch(r"\d{11}", nome))
+
+    def ja_cpf_matricula(nome):
+        return bool(re.fullmatch(r"\d{11}_\d+", nome))
+
+    # ===============================
+    # LEITURA DA PLANILHA (LINHA 7!)
+    # ===============================
+
+    df = pd.read_excel(
+        planilha_cpf_matricula,
+        header=6,      # 👈 linha 7 do Excel
+        dtype=str
+    )
+
+    # NORMALIZA NOMES DAS COLUNAS
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.upper()
+        .str.replace(" ", "_")
+    )
+
+    # VALIDAÇÃO CLARA
+    if "CPF" not in df.columns or "MATRICULA" not in df.columns:
+        raise ValueError(
+            f"❌ Colunas esperadas não encontradas.\n"
+            f"Colunas encontradas: {list(df.columns)}"
+        )
+
+    # LIMPA DADOS
+    df["CPF"] = df["CPF"].apply(limpar_cpf)
+    df["MATRICULA"] = df["MATRICULA"].str.strip()
+
+    mapa_cpf_matricula = dict(zip(df["CPF"], df["MATRICULA"]))
+
+    # ===============================
+    # PROCESSAMENTO DAS PASTAS
+    # ===============================
+
+    print("\n🚀 Iniciando inclusão de matrícula em pastas somente CPF...\n")
+
+    for nome_pasta in os.listdir(pasta_raiz):
+        caminho_pasta = os.path.join(pasta_raiz, nome_pasta)
+
+        if not os.path.isdir(caminho_pasta):
+            continue
+
+        # Ignora quem já está correto
+        if ja_cpf_matricula(nome_pasta):
+            print(f"ℹ️ Já correto: {nome_pasta}")
+            continue
+
+        # Atua SOMENTE se for apenas CPF
+        if not eh_somente_cpf(nome_pasta):
+            print(f"⏭️ Ignorado (não é só CPF): {nome_pasta}")
+            continue
+
+        cpf = nome_pasta
+        matricula = mapa_cpf_matricula.get(cpf)
+
+        if not matricula:
+            print(f"❌ Matrícula não encontrada para CPF {cpf}")
+            continue
+
+        novo_nome = f"{cpf}_{matricula}"
+        novo_caminho = os.path.join(pasta_raiz, novo_nome)
+
+        if os.path.exists(novo_caminho):
+            print(f"⚠️ Já existe: {novo_nome}")
+            continue
+
+        try:
+            os.rename(caminho_pasta, novo_caminho)
+            print(f"✅ {nome_pasta} ➜ {novo_nome}")
+        except Exception as e:
+            print(f"❌ Erro ao renomear {nome_pasta}: {e}")
+
+    print("\n🏁 Processo finalizado com sucesso!")
