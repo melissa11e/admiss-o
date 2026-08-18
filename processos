@@ -104,8 +104,8 @@ def renomear_cpfmat(pasta_raiz, pasta_id_cpf, planilha_cpf_matricula):
     def limpar_cpf(valor):
         return re.sub(r"\D", "", str(valor))
 
-    def ja_cpf_matricula(nome):
-        return bool(re.match(r"^\d{11}_\d+$", nome))
+    def ja_matricula_cpf(nome):
+        return bool(re.fullmatch(r"\d+_\d{11}", nome))
 
     # =============================================================
     # ETAPA 1 - ID_VAGA -> CPF
@@ -155,7 +155,7 @@ def renomear_cpfmat(pasta_raiz, pasta_id_cpf, planilha_cpf_matricula):
         if not os.path.isdir(caminho_pasta):
             continue
 
-        if ja_cpf_matricula(nome_pasta):
+        if ja_matricula_cpf(nome_pasta):
             print(f"ℹ️ Já correto: {nome_pasta}")
             continue
 
@@ -173,7 +173,7 @@ def renomear_cpfmat(pasta_raiz, pasta_id_cpf, planilha_cpf_matricula):
             print(f"⚠️ Matrícula não encontrada para CPF {cpf}")
             continue
 
-        novo_nome = f"{cpf}_{matricula}"
+        novo_nome = f"{matricula}_{cpf}"
         novo_caminho = os.path.join(pasta_raiz, novo_nome)
 
         if os.path.exists(novo_caminho):
@@ -204,8 +204,8 @@ def adicionar_matricula_se_somente_cpf(pasta_raiz, planilha_cpf_matricula):
     def eh_somente_cpf(nome):
         return bool(re.fullmatch(r"\d{11}", nome))
 
-    def ja_cpf_matricula(nome):
-        return bool(re.fullmatch(r"\d{11}_\d+", nome))
+    def ja_matricula_cpf(nome):
+        return bool(re.fullmatch(r"\d+_\d{11}", nome))
 
     # ===============================
     # LEITURA DA PLANILHA (LINHA 7!)
@@ -251,7 +251,7 @@ def adicionar_matricula_se_somente_cpf(pasta_raiz, planilha_cpf_matricula):
             continue
 
         # Ignora quem já está correto
-        if ja_cpf_matricula(nome_pasta):
+        if ja_matricula_cpf(nome_pasta):
             print(f"ℹ️ Já correto: {nome_pasta}")
             continue
 
@@ -267,7 +267,7 @@ def adicionar_matricula_se_somente_cpf(pasta_raiz, planilha_cpf_matricula):
             print(f"❌ Matrícula não encontrada para CPF {cpf}")
             continue
 
-        novo_nome = f"{cpf}_{matricula}"
+        novo_nome = f"{matricula}_{cpf}"
         novo_caminho = os.path.join(pasta_raiz, novo_nome)
 
         if os.path.exists(novo_caminho):
